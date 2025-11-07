@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #dc3545; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background-color: #f8f9fa; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .violation-details { margin: 20px 0; padding: 15px; background-color: #fff; border-left: 4px solid #dc3545; }
+        .fine-amount { font-size: 24px; color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Traffic Violation Notice</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ owner_name }},</p>
+            
+            <p>This is to inform you that your vehicle with license plate <strong>{{ license_plate }}</strong> has been detected violating the speed limit.</p>
+            
+            <div class="violation-details">
+                <h3>Violation Details:</h3>
+                <p><strong>Date & Time:</strong> {{ timestamp }}</p>
+                <p><strong>Location:</strong> {{ location }}</p>
+                <p><strong>Recorded Speed:</strong> {{ speed }} km/h</p>
+                <p><strong>Speed Limit:</strong> {{ speed_limit }} km/h</p>
+                <p><strong>Fine Amount:</strong> <span class="fine-amount">Rs. 500</span></p>
+            </div>
+            
+            <p>Please note that this violation has been recorded in our system. You are required to pay the fine within 30 days of this notice.</p>
+            
+            <p>For any queries or to contest this violation, please contact our traffic monitoring department.</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>Traffic Monitoring System</p>
+        </div>
+    </div>
+</body>
+</html>

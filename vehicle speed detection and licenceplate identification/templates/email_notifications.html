@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Email Notifications{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-envelope"></i> Email Notifications</h2>
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date Sent</th>
+                            <th>License Plate</th>
+                            <th>Owner Name</th>
+                            <th>Violation Speed</th>
+                            <th>Fine Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notification in notifications %}
+                        <tr>
+                            <td>{{ notification.sent_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ notification.license_plate }}</td>
+                            <td>{{ notification.owner_name }}</td>
+                            <td>{{ notification.speed }} km/h</td>
+                            <td>Rs. {{ notification.fine_amount }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if notification.status == 'sent' else 'warning' }}">
+                                    {{ notification.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

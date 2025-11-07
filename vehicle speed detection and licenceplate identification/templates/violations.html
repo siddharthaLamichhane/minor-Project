@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Violations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-exclamation-triangle"></i> Speed Violations</h5>
+            <button class="btn btn-light delete-all-violations">
+                <i class="fas fa-trash"></i> Delete All Violations
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped" id="violationsTable">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>License Plate</th>
+                            <th>Speed</th>
+                            <th>Status</th>
+                            <th>Evidence</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for violation in violations %}
+                        <tr>
+                            <td>{{ violation.date }}</td>
+                            <td>{{ violation.license_plate }}</td>
+                            <td>{{ violation.speed }} km/h</td>
+                            <td>
+                                <span class="badge {% if violation.status == 'Violation' %}bg-danger{% else %}bg-success{% endif %}">
+                                    {{ violation.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if violation.image_path %}
+                                <a href="{{ url_for('static', filename=violation.image_path.replace('static/', '')) }}" 
+                                   target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-image"></i> View Image
+                                </a>
+                                {% else %}
+                                <span class="text-muted">No image</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-danger delete-violation" data-violation-id="{{ violation._id|string }}">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Delete all violations functionality
+    $('.delete-all-violations').click(function() {
+        if (confirm('Are you sure you want to delete all violations? This action cannot be undone.')) {
+            $.ajax({
+                url: '/clear_violations',
+                type: 'POST',
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting violations: ' + (response.error || 'Unknown error'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Error deleting violations: ' + (error || 'Unknown error'));
+                }
+            });
+        }
+    });
+    // Delete violation functionality
+    $('.delete-violation').click(function() {
+        const violationId = $(this).data('violation-id');
+        if (confirm('Are you sure you want to delete this violation?')) {
+            $.ajax({
+                url: '/delete_violation',
+                type: 'POST',
+                data: JSON.stringify({ id: violationId }),
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting violation: ' + response.error);
+                    }
+                },
+                error: function() {
+                    alert('Error deleting violation');
+                }
+            });
+        }
+    });
+
+    // Auto-refresh functionality with animation
+    let isProcessing = false;
+
+    function checkProcessingStatus() {
+        $.ajax({
+            url: '/check_processing_status',
+            type: 'GET',
+            success: function(response) {
+                isProcessing = response.is_processing;
+                if (isProcessing) {
+                    refreshViolations();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error checking processing status:', error);
+            }
+        });
+    }
+
+    function refreshViolations() {
+        if (!isProcessing) return;
+
+        $.ajax({
+            url: '/get_latest_violations',
+            type: 'GET',
+            success: function(response) {
+                if (response.violations) {
+                    const tbody = $('#violationsTable tbody');
+                    const currentIds = new Set($('.delete-violation').map(function() {
+                        return $(this).data('violation-id');
+                    }).get());
+                    
+                    let newViolationsFound = false;
+                    response.violations.forEach(function(violation) {
+                        if (!currentIds.has(violation._id)) {
+                            newViolationsFound = true;
+                            const row = `
+                                <tr class="new-violation" style="display: none;">
+                                    <td>${violation.date}</td>
+                                    <td>${violation.license_plate}</td>
+                                    <td>${violation.speed} km/h</td>
+                                    <td>
+                                        <span class="badge ${violation.status === 'Violation' ? 'bg-danger' : 'bg-success'}">
+                                            ${violation.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        ${violation.image_path ? 
+                                            `<a href="/static/${violation.image_path.replace('static/', '')}" 
+                                                target="_blank" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-image"></i> View Image
+                                            </a>` : 
+                                            '<span class="text-muted">No image</span>'
+                                        }
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger delete-violation" data-violation-id="${violation._id}">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.prepend(row);
+                            $('.new-violation').fadeIn('slow').removeClass('new-violation');
+                        }
+                    });
+
+                    if (newViolationsFound) {
+                        // Play notification sound
+                        const audio = new Audio('/static/alert.mp3');
+                        audio.play();
+                        
+                        // Show notification
+                        if (Notification.permission === 'granted') {
+                            new Notification('New Violation Detected', {
+                                body: 'A new speed violation has been detected.',
+                                icon: '/static/warning-icon.png'
+                            });
+                        }
+                    }
+                }
+                // Check status again after refresh
+                setTimeout(checkProcessingStatus, 5000);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching violations:', error);
+                // Retry checking status
+                setTimeout(checkProcessingStatus, 5000);
+            }
+        });
+    }
+
+    // Start checking processing status
+    checkProcessingStatus();
+    // Add CSS for new violations
+    $('<style>').text(`
+        .new-violation {
+            background-color: #ffd700 !important;
+            transition: background-color 2s ease-out;
+        }
+        .new-violation.show {
+            background-color: transparent !important;
+        }
+        .container {
+            padding: 15px;
+        }
+        .card {
+            margin: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card-body {
+            padding: 15px;
+        }
+        .table td, .table th {
+            padding: 15px;
+        }
+        .btn {
+            margin: 0 5px;
+        }
+    `).appendTo('head');
+
+    // Initial load and refresh every 1 second for more responsive updates
+    refreshViolations();
+    setInterval(refreshViolations, 1000);
+
+    // Request notification permission
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+
+    // Add status indicator
+    $('<div>').addClass('update-status').css({
+        'position': 'fixed',
+        'bottom': '20px',
+        'right': '20px',
+        'padding': '10px',
+        'background': 'rgba(0,0,0,0.8)',
+        'color': 'white',
+        'border-radius': '5px',
+        'display': 'none'
+    }).appendTo('body');
+
+    // Show status during updates
+    $(document).ajaxStart(function() {
+        $('.update-status').text('Checking for new violations...').fadeIn();
+    }).ajaxComplete(function() {
+        $('.update-status').fadeOut();
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Statistics Cards -->
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Violations</h5>
+                    <p class="card-text display-4">{{ total_violations }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="card-text display-4">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Upload Section -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5><i class="fas fa-upload"></i> Upload Video</h5>
+        </div>
+        <div class="card-body">
+            <form id="videoUploadForm" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="video" class="form-label">Select Video File</label>
+                    <input type="file" class="form-control" id="video" name="video" accept=".mp4,.avi,.mov">
+                </div>
+                <button type="submit" class="btn btn-primary">Upload & Process</button>
+            </form>
+            <div id="uploadProgress" class="mt-3 d-none">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"></div>
+                </div>
+                <p class="mt-2" id="progressText"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this JavaScript to handle the upload -->
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    var isUploading = false;
+    var uploadForm = $('#videoUploadForm');
+    
+    // Clear form and reset state
+    function resetForm() {
+        uploadForm[0].reset();
+        isUploading = false;
+        uploadForm.find('button[type="submit"]').prop('disabled', false);
+        $('#uploadProgress').addClass('d-none');
+    }
+    
+    uploadForm.off('submit').on('submit', function(e) {
+        e.preventDefault();
+        
+        if (isUploading) {
+            console.log('Upload already in progress');
+            return false;
+        }
+        
+        var videoFile = $('#video')[0].files[0];
+        if (!videoFile) {
+            alert('Please select a video file');
+            return false;
+        }
+        
+        isUploading = true;
+        var formData = new FormData(this);
+        var progressBar = $('.progress-bar');
+        var progressDiv = $('#uploadProgress');
+        var progressText = $('#progressText');
+        var submitButton = $(this).find('button[type="submit"]');
+        
+        submitButton.prop('disabled', true);
+        progressDiv.removeClass('d-none');
+        progressBar.css('width', '0%');
+        progressText.text('Starting upload...');
+        
+        $.ajax({
+            url: '/upload_video',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            cache: false,
+            xhr: function() {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        var percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.css('width', percent + '%');
+                        progressText.text('Uploading: ' + percent + '%');
+                    }
+                });
+                return xhr;
+            },
+            success: function(response) {
+                if (response.success) {
+                    progressText.text('Video uploaded, processing started...');
+                    progressBar.css('width', '0%');
+                    checkProcessingStatus();
+                } else {
+                    progressText.text('Error: ' + response.error);
+                    resetForm();
+                }
+            },
+            error: function(xhr, status, error) {
+                progressText.text('Upload failed: ' + error);
+                resetForm();
+            }
+        });
+        
+        return false;
+    });
+    
+    function checkProcessingStatus() {
+        var statusCheck = setInterval(function() {
+            $.ajax({
+                url: '/processing_status',
+                type: 'GET',
+                success: function(response) {
+                    console.log('Status response:', response); // Add debug logging
+                    if (response.status === 'completed') {
+                        $('#progressText').text('Processing completed!');
+                        $('.progress-bar').css('width', '100%');
+                        clearInterval(statusCheck);
+                        isUploading = false;
+                        $('button[type="submit"]').prop('disabled', false);
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    } else if (response.status === 'error') {
+                        $('#progressText').text('Error: ' + response.error);
+                        clearInterval(statusCheck);
+                        isUploading = false;
+                        $('button[type="submit"]').prop('disabled', false);
+                    } else {
+                        $('#progressText').text('Processing: ' + response.progress + '%');
+                        $('.progress-bar').css('width', response.progress + '%');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Status check error:', error); // Add debug logging
+                    $('#progressText').text('Status check failed: ' + error);
+                    clearInterval(statusCheck);
+                    isUploading = false;
+                    $('button[type="submit"]').prop('disabled', false);
+                }
+            });
+        }, 2000);
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

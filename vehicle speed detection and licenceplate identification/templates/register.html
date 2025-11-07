@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Vehicle Detection System{% endblock %}
+
+{% block content %}
+<style>
+    .card {
+        border-radius: 15px;
+        margin-top: 30px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(to bottom right, #ffffff, #f8f9fa);
+    }
+    .card-body {
+        padding: 30px !important;
+    }
+    .form-control {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-right: none;
+        color: #6c757d;
+    }
+    .form-control:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+        border-color: #80bdff;
+        background-color: #fff;
+    }
+    .btn-primary {
+        padding: 12px;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        background: linear-gradient(to right, #007bff, #0056b3);
+        border: none;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(to right, #0056b3, #004494);
+    }
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #495057;
+    }
+    h2 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 25px;
+    }
+    .input-group {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    a {
+        color: #007bff;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    a:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+    .mb-3 {
+        margin-bottom: 1.5rem !important;
+    }
+</style>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="text-center mb-4">Register Vehicle</h2>
+                <form method="POST" action="{{ url_for('register') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Full Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="license_plate" class="form-label">License Plate Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-car-front"></i></span>
+                            <input type="text" class="form-control" id="license_plate" name="license_plate" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number (Optional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                            <input type="tel" class="form-control" id="phone" name="phone">
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Register Vehicle</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <p class="mb-0">Already registered? <a href="{{ url_for('login') }}">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

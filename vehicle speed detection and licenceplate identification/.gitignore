@@ -1,0 +1,114 @@
+# ==============================
+# 🔥 GENERAL PYTHON / DJANGO IGNORE
+# ==============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.log
+*.sqlite3
+*.db
+*.tmp
+*.bak
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# Django specific
+instance/
+media/
+db.sqlite3
+
+# ==============================
+# 🧠 AI / MODEL FILES
+# ==============================
+*.pt
+*.pth
+*.weights
+*.onnx
+*.h5
+*.ckpt
+*.pkl
+*.tflite
+
+# Model directories
+/models/
+*/__pycache__/
+
+# ==============================
+# 📦 NODE / REACT IGNORE
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# React build folders
+build/
+dist/
+
+# ==============================
+# 📸 VIDEO / IMAGE OUTPUTS
+# ==============================
+static/frames/
+static/violations/
+static/uploads/
+static/processed_frames/
+uploads/
+uploads/videos/
+uploads/frames/
+opencv-speed-detector/output/
+opencv-speed-detector/sample_data/
+
+# ==============================
+# ⚙️ CONFIG / ENVIRONMENT FILES
+# ==============================
+.env
+*.json
+*.yaml
+*.yml
+
+# Ignore local config or secrets
+config/*.json
+
+# ==============================
+# 🧰 IDE & OS FILES
+# ==============================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ==============================
+# 📊 REPORTS / GENERATED DATA
+# ==============================
+reports/
+*.csv
+*.xls
+*.xlsx
+
+# ==============================
+# 🚫 TEMP / CACHE
+# ==============================
+*.cache
+*.pytest_cache/
+.nox/
+.tox/
+htmlcov/
+.coverage
+coverage.xml
+*.weights
+# Ignore large model files
+*.pt
+*.weights
+*.h5
+*.onnx
+
+# Ignore temporary files
+__pycache__/
+*.pyc
+*.pkl

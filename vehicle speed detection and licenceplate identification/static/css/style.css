@@ -1,0 +1,120 @@
+/* Navbar Styling */
+.navbar {
+    height: 60px;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin-right: 1rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 1rem;
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.navbar-toggler {
+    padding: 0.25rem 0.75rem;
+    margin-left: auto;
+}
+
+.processing-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    margin: 0;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.processing-status h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.progress {
+    height: 15px;
+    margin: 8px 0;
+    background-color: #f5f5f5;
+    border-radius: 3px;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #4CAF50;
+    text-align: center;
+    line-height: 15px;
+    font-size: 12px;
+    color: white;
+    transition: width .6s ease;
+}
+
+#processingDetails {
+    margin: 10px 0;
+    font-size: 13px;
+}
+
+#processingDetails p {
+    margin: 5px 0;
+}
+
+#latestViolation {
+    margin-top: 15px;
+    padding: 8px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+#latestViolation img {
+    max-width: 100%;
+    height: auto;
+    margin-top: 8px;
+    border-radius: 3px;
+}
+
+/* Add minimize/maximize functionality */
+.minimize-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 2px 6px;
+    background: #eee;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.minimized {
+    height: 30px;
+    overflow: hidden;
+}

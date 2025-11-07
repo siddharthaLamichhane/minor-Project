@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+    <h2><i class="fas fa-chart-bar"></i> Traffic Reports</h2>
+
+    <div class="row mt-4">
+        <!-- Report Filters -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-filter"></i> Report Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form id="reportForm">
+                        <div class="mb-3">
+                            <label class="form-label">Date Range</label>
+                            <select class="form-select" id="dateRange">
+                                <option value="today">Today</option>
+                                <option value="week">Last 7 Days</option>
+                                <option value="month">Last 30 Days</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        
+                        <div id="customDateRange" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="endDate">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-sync-alt"></i> Update Report
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Content -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-chart-line"></i> Traffic Analysis</h5>
+                    <button class="btn btn-light" id="downloadReport">
+                        <i class="fas fa-download"></i> Download Report
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="reportContent">
+                        <div class="alert alert-info" id="loadingAlert" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading report data...
+                        </div>
+                        <div class="alert alert-danger" id="errorAlert" style="display: none;">
+                            <i class="fas fa-exclamation-triangle"></i> <span id="errorMessage"></span>
+                        </div>
+                        <canvas id="chartContainer" style="height: 300px;"></canvas>
+                        <div class="table-responsive mt-4">
+                            <table class="table table-striped" id="reportTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Total Violations</th>
+                                        <th>Average Speed</th>
+                                        <th>Peak Hours</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Report data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reports-page .card {
+        margin-bottom: 20px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    #downloadReport {
+        margin-top: 0;
+    }
+    .table th {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script>
+    let chart;
+    let currentData = null;
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateRange = document.getElementById('dateRange');
+        const customDateRange = document.getElementById('customDateRange');
+        const reportForm = document.getElementById('reportForm');
+        const downloadBtn = document.getElementById('downloadReport');
+
+        // Handle date range selection
+        dateRange.addEventListener('change', function() {
+            customDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+
+        // Handle form submission
+        reportForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            fetchReportData();
+        });
+
+        // Handle download
+        downloadBtn.addEventListener('click', downloadReport);
+
+        // Initial load
+        fetchReportData();
+    });
+
+    function fetchReportData() {
+        const loadingAlert = document.getElementById('loadingAlert');
+        const errorAlert = document.getElementById('errorAlert');
+        const errorMessage = document.getElementById('errorMessage');
+        const dateRange = document.getElementById('dateRange');
+
+        let startDate, endDate;
+
+        // Determine date range
+        switch(dateRange.value) {
+            case 'today':
+                startDate = new Date().toISOString().split('T')[0];
+                endDate = startDate;
+                break;
+            case 'week':
+                endDate = new Date().toISOString().split('T')[0];
+                startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                break;
+            case 'month':
+                endDate = new Date().toISOString().split('T')[0];
+                startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                break;
+            case 'custom':
+                startDate = document.getElementById('startDate').value;
+                endDate = document.getElementById('endDate').value;
+                if (!startDate || !endDate) {
+                    showError('Please select both start and end dates');
+                    return;
+                }
+                break;
+        }
+
+        // Show loading state
+        loadingAlert.style.display = 'block';
+        errorAlert.style.display = 'none';
+
+        // Fetch data
+        fetch(`/api/report-data?start_date=${startDate}&end_date=${endDate}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch report data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                currentData = data;
+                updateChart(data);
+                updateTable(data);
+                loadingAlert.style.display = 'none';
+            })
+            .catch(error => {
+                showError(error.message);
+                loadingAlert.style.display = 'none';
+            });
+    }
+
+    function showError(message) {
+        const errorAlert = document.getElementById('errorAlert');
+        const errorMessage = document.getElementById('errorMessage');
+        errorAlert.style.display = 'block';
+        errorMessage.textContent = message;
+    }
+
+    function updateChart(data) {
+        const ctx = document.getElementById('chartContainer')
+        console.log("ctx",ctx);
+       ctx.getContext('2d');
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates,
+                datasets: [{
+                    label: 'Violations',
+                    data: data.violations,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.1,
+                    fill: true
+                }, {
+                    label: 'Average Speed',
+                    data: data.speeds,
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Traffic Violations and Speed Analysis',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    }
+
+    function updateTable(data) {
+        const tbody = document.getElementById('reportTable').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+
+        if (!data.details || data.details.length === 0) {
+            const row = tbody.insertRow();
+            const cell = row.insertCell(0);
+            cell.colSpan = 4;
+            cell.className = 'text-center';
+            cell.textContent = 'No data available for the selected date range';
+            return;
+        }
+
+        data.details.forEach(detail => {
+            const row = tbody.insertRow();
+            row.insertCell(0).textContent = detail.date;
+            row.insertCell(1).textContent = detail.total_violations;
+            row.insertCell(2).textContent = detail.avg_speed.toFixed(2) + ' km/h';
+            row.insertCell(3).textContent = detail.peak_hours || 'N/A';
+        });
+    }
+
+    function downloadReport() {
+        if (!currentData) {
+            showError('No data available to download');
+            return;
+        }
+
+        const rows = [['Date', 'Total Violations', 'Average Speed (km/h)', 'Peak Hours']];
+        currentData.details.forEach(detail => {
+            rows.push([
+                detail.date,
+                detail.total_violations,
+                detail.avg_speed.toFixed(2),
+                detail.peak_hours
+            ]);
+        });
+
+        const csvContent = rows.map(row => row.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'traffic_report.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+</script>
+{% endblock %}
