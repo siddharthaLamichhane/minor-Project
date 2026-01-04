@@ -25,7 +25,7 @@ This project is an advanced vehicle speed detection and fine management system t
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone https://github.com/siddharthaLamichhane/minor-Project
 cd speed-detection-system
 ```
 
@@ -92,26 +92,9 @@ python app.py
 - Provides statistical analysis and trends
 - Exports data in various formats
 
-## Configuration
 
-Key configuration files:
-- `config/config.json`: Main configuration file
-- `models/yolov3.cfg`: YOLO model configuration
-- `utils/email_sender.py`: Email notification settings
-
-## Directory Structure
-```
-├── backend/          # Backend API and models
-├── frontend/         # Web interface files
-├── models/           # ML models and configurations
-├── static/          # Static assets
-├── templates/       # HTML templates
-├── utils/           # Utility functions
-└── videos/          # Video storage
 ```
 
-## Contributing
-Contributions are welcome! Please feel free to submit pull requests.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
